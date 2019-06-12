@@ -1,5 +1,35 @@
+titles = {
+  name: {
+    tr: 'Ad',
+    en: 'Name'
+  },
+  title: {
+    tr: 'Pozisyon',
+    en: 'Position'
+  },
+  department: {
+    tr: 'Departman',
+    en: 'Department'
+  },
+  location: {
+    tr: 'Lokasyon',
+    en: 'Location'
+  },
+  workingStartDate: {
+    tr: 'Başlama Tarihi',
+    en: 'Start Date'
+  },
+  workingEndDate: {
+    tr: 'Çıkış Tarihi',
+    en: 'Termination Date'
+  },
+  leaveReason: {
+    tr: 'Çıkış Nedeni',
+    en: 'Exit Reason'
+  }
+};
 
-var JSONData = [
+var JSONDatas = [
     {
         identifier: "7e44cf91-177b-4520-93f4-83cd63d6a3e4", 
         amount: 51,
@@ -46,84 +76,79 @@ var JSONData = [
         status: "SUCCESS"
     }
 ]
-$('.excel').click(function(){
-    JSONToCSVConvertor();
-});
+const table = document.getElementById('creatExcelTable');
 
-function JSONToCSVConvertor(JSONData) {
-    const resultclone = $('.creatExcelTable')
-    resultclone.children('tbody').children('tr').remove();
-
-      const tr = $('<tr/>');
-        $('table').append(tr);
-        tr.append(`<th>ldapName</th>`);
-        tr.append(`<th>Yükleme Yapan Numara</th>`);
-        tr.append(`<th>Miktar</th>`);
-        tr.append(`<th>Gönderen Kart</th>`);
-        tr.append(`<th>Alıcı Kart</th>`);
-        tr.append(`<th>İşlem Tarihi</th>`);
-        tr.append(`<th>Kampanya Adı</th>`);
-        tr.append(`<th>Durum</th>`);
-        tr.append(`<th>Açıklama</th>`);
-    
-        JSONData.map( item =>  {
-       
-          let status = ''
-          if(item.status === "SUCCESS"){
-            status = 'Başarılı'
-          } else if (item.status === "ERROR"){
-            status = 'Başarısız'
-          }else if (item.status === "WAITING") {
-            status = 'Beklemede'
-          }
-            
-          const tr = $('<tr/>');
-          tr.append(`<td>${item.ldapName}</td>`);
-          tr.append(`<td>${item.msisdn}</td>`);
-          tr.append(`<td>${item.amount}</td>`);
-          tr.append(`<td>${item.senderMaskedCard ? item.senderMaskedCard : ''}</td>`);
-          tr.append(`<td>${item.receiverMaskedCard ? item.receiverMaskedCard : ''}</td>`);
-          tr.append(`<td>${ReportTitle}</td>`);
-          tr.append(`<td>${status ? status : ''}</td>`);
-          tr.append(`<td>${item.errorMessage ? item.errorMessage : ''}</td>`);
-          $('table').append(tr);
-      });
-      
-
-    var uri = 'data:application/vnd.ms-excel;charset=utf-8;base64,',
-        template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
-        '<head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>' +
-        '<x:Name>Ark1</x:Name>' +
-        '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->' +
-        '<style> table{mso-displayed-decimal-separator:"\,";mso-displayed-thousand-separator:"\.";} td{border:none;font-family: Calibri, sans-serif;}  .number{mso-number-format:"###,##0";}</style>' +
-        '<meta name=ProgId content=Excel.Sheet>' +
-        '<meta http-equiv="Content-Type" content="charset=UTF-8">'+
-        '</head><body>' +
-        '<table>'+ resultclone.html() +'</table>'+
-        '</body></html>',
-    base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))); };
-        getContent(
-          uri + base64(template),
-          'xls',
-          template,
-          'application/vnd.ms-excel'
-      );
+  const generateTableHead = (tableHTML, title) => {
+    const thead = tableHTML.createTHead();
+    const row = thead.insertRow();
+    for (const key in title) {
+      const th = document.createElement('th');
+      // you can make language control 
+      //const text = document.createTextNode(title[key][language]);
+      const text = document.createTextNode(title[key].tr);
+      th.appendChild(text);
+      row.appendChild(th);
+    }
   };
 
-
-  function  getContent(href, extension, content, MIME) {
-    var downloadAttrSupported = document.createElement('a').download !== undefined;
-      var a, blobObject, name = 'file';
-      if (window.Blob && window.navigator.msSaveOrOpenBlob) {
+  const generateTable = (tables, JSONData) => {
+    JSONData.map(element => {
+      const row = tables.insertRow();
+      for (const key in element) {
+        if (element.hasOwnProperty.call(element, key)) {
+          const cell = row.insertCell();
+          const text = document.createTextNode(element[key]);
+          cell.appendChild(text);
+        }
+      }
+      return '';
+    });
+  };
+  const getContent = (href, extension, content) => {
+    const downloadAttrSupported =
+      document.createElement('a').download !== undefined;
+    let a;
+    let blobObject;
+    const name = 'file';
+    if (window.Blob && window.navigator.msSaveOrOpenBlob) {
       blobObject = new Blob([content]);
-      window.navigator.msSaveOrOpenBlob(blobObject, name + '.' + extension);
-      } else if(downloadAttrSupported) {
+      window.navigator.msSaveOrOpenBlob(blobObject, `${name}.${extension}`);
+    } else if (downloadAttrSupported) {
       a = document.createElement('a');
       a.href = href;
-      a.target      = '_blank';
-      a.download    = name + '.' + extension;
+      a.target = '_blank';
+      a.download = `${name}.${extension}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      }
-  }
+    }
+  };
+  const download = () => {
+    const uri = 'data:application/vnd.ms-excel;charset=utf-8;base64,';
+    const template =
+      `${'<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+        '<head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>' +
+        '<x:Name>Ark1</x:Name>' +
+        '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->' +
+        '<style> table{mso-displayed-decimal-separator:",";mso-displayed-thousand-separator:".";} td{border:none;font-family: Calibri, sans-serif;}  .number{mso-number-format:"###,##0";}</style>' +
+        '<meta name=ProgId content=Excel.Sheet>' +
+        '<meta http-equiv="Content-Type" content="charset=UTF-8">' +
+        '</head><body>' +
+        '<table>'}${table.innerHTML}</table>` + '</body></html>';
+    const base64 = s => {
+      return window.btoa(unescape(encodeURIComponent(s)));
+    };
+
+    getContent(
+      uri + base64(template),
+      'xls',
+      template,
+      'application/vnd.ms-excel'
+    );
+  };
+
+  $('.excel').click(function(){
+    generateTableHead(table, titles);
+    generateTable(table, JSONDatas);
+    download(table, JSONDatas);
+});
